@@ -8,35 +8,21 @@ using System.Linq;
 using System.Threading.Tasks;
 using StudentsCrud.Models;
 using Smartsheet.Api.OAuth;
+using Microsoft.Extensions.Configuration;
 
 namespace StudentsCrud.Controllers
 {
 	[Route("Api/Student")]
 	public class StudentController : Controller
 	{
-
-		static Dictionary<string, long> columnMap = new Dictionary<string, long>(); // Map from friendly column name to column Id 
-																					// GET: StudentController/Details/5
-		public ActionResult Details()
+		IConfiguration _iconfiguration;
+		public StudentController(IConfiguration iconfiguration)
 		{
-			// Initialize client. Uses API access token from environment variable SMARTSHEET_ACCESS_TOKEN
-			String accessToken = "RGQpN47l4kJBvLaOc4jlTONkd2jaexjuUe3pA";
-			SmartsheetClient smartsheet = new SmartsheetBuilder().SetAccessToken(accessToken).Build();
-			// Get current user
-			UserProfile userProfile = smartsheet.UserResources.GetCurrentUser();
+			_iconfiguration = iconfiguration;
 
-			long sheetid = 4988319210727300;
-			Sheet sheet = smartsheet.SheetResources.GetSheet(sheetid, null, null, null, null, null, null, null);
-			Console.WriteLine("Loaded " + sheet.Rows.Count + " rows from sheet: " + sheet.Name);
-
-			// Build column map for later reference
-			foreach (Column column in sheet.Columns)
-				columnMap.Add(column.Title, (long)column.Id);
-
-			Console.WriteLine("Done (Hit enter)");
-			Console.ReadLine();
-			return View();
 		}
+
+		static Dictionary<string, long> columnMap = new Dictionary<string, long>(); 
 
 		[HttpGet("GetStudentDetails")]
 		public List<Student> GetStudentDetails()
@@ -65,7 +51,7 @@ namespace StudentsCrud.Controllers
 							Postal = Convert.ToString(tmpRow.Cells[5].Value),
 							Phone = Convert.ToString(tmpRow.Cells[6].Value),
 							Email = Convert.ToString(tmpRow.Cells[7].Value),
-							RowId = Convert.ToString(tmpRow.Id.Value)
+							RowId = Convert.ToInt64(tmpRow.Id.Value)
 						};
 					}
 					result.Add(StudentData);
@@ -77,38 +63,30 @@ namespace StudentsCrud.Controllers
 			}
 			return result;
 		}
-
-		[Route("StudentdetailByrowId")]
-		[HttpPost]
-		public Row StudentdetailByrowId(long id)
+		[HttpPost("StudentdetailByrowId")]
+		public Row StudentdetailByrowId([FromBody] long id)
 		{
 			String accessToken = "RGQpN47l4kJBvLaOc4jlTONkd2jaexjuUe3pA";
 			SmartsheetClient smartsheet = new SmartsheetBuilder().SetAccessToken(accessToken).Build();
 			long sheetid = 4988319210727300;
 			Sheet sheet = smartsheet.SheetResources.GetSheet(sheetid, null, null, null, null, null, null, null);
-
-			Row row = smartsheet.SheetResources.RowResources.GetRow(
-  sheetid,               // sheetId
-  id,                   // rowId
-  null,                           // IEnumerable<RowInclusion> include
-  null                            // IEnumerable<RowExclusion> exclude
-);
+			Row row = smartsheet.SheetResources.RowResources.GetRow(sheetid,id,null,null);
 			return row;
 		}
-		[HttpPost]
-		[Route("AddorUpdatestudent")]
-		public object AddorUpdatestudent(Student st)
+		[HttpPost("AddorUpdatestudent")]
+		public object AddorUpdatestudent([FromBody]Student st)
 		{
 			try
 			{
-				if (st.RowId != "")
+				String accessToken = "RGQpN47l4kJBvLaOc4jlTONkd2jaexjuUe3pA";
+				SmartsheetClient smartsheet = new SmartsheetBuilder().SetAccessToken(accessToken).Build();
+				long sheetid = 4988319210727300;
+				Sheet sheet = smartsheet.SheetResources.GetSheet(sheetid, null, null, null, null, null, null, null);
+				if (st.RowId ==0)
 				{
 
 					// Add rows to sheet
-					String accessToken = "RGQpN47l4kJBvLaOc4jlTONkd2jaexjuUe3pA";
-					SmartsheetClient smartsheet = new SmartsheetBuilder().SetAccessToken(accessToken).Build();
-					long sheetid = 4988319210727300;
-					Sheet sheet = smartsheet.SheetResources.GetSheet(sheetid, null, null, null, null, null, null, null);
+					
 					columnMap.Clear();
 					foreach (Column column in sheet.Columns)
 						columnMap.Add(column.Title, (long)column.Id);
@@ -131,36 +109,50 @@ namespace StudentsCrud.Controllers
 					};
 					rowA = new Row.AddRowBuilder(true, null, null, null, null).SetCells(cellsA).Build();
 					IList<Row> newRows = smartsheet.SheetResources.RowResources.AddRows(sheetid, new Row[] { rowA });
+					
 				}
 				else
 				{
+					if (st.RowId > 0)
+					{
+						var obj=StudentdetailByrowId(st.RowId);
+						if (obj.Id > 0)
+						{
+							
+						}
+						var cellToUpdateB = new Cell
+						{
+							ColumnId = 1888812600190852,
+							Value = "A"
+						};
 
+						// Identify row and add new cell values to it
+						var rowToUpdate = new Row
+						{
+							Id = 6572427401553796,
+							Cells = new Cell[] { cellToUpdateB }
+						};
+						IList<Row> updatedRow = smartsheet.SheetResources.RowResources.UpdateRows(sheetid,new Row[] { rowToUpdate });
+						return "Updated Successfully";
+					}
 				}
 			}
 			catch (Exception ex)
 			{
 				Console.Write(ex.Message);
 			}
-			return "Data not insert";
 
+			return "Data inserted Successfully";
 		}
-		[Route("Delete")]
-		[HttpPost]
-		public string Delete(int id)
+		[HttpPost("Delete")]
+		public string Delete(long id)
 		{
 			String accessToken = "RGQpN47l4kJBvLaOc4jlTONkd2jaexjuUe3pA";
 			SmartsheetClient smartsheet = new SmartsheetBuilder().SetAccessToken(accessToken).Build();
 			long sheetid = 4988319210727300;
 			Sheet sheet = smartsheet.SheetResources.GetSheet(sheetid, null, null, null, null, null, null, null);
-			smartsheet.SheetResources.RowResources.DeleteRows(
-  sheetid,                                    // sheetId
-  new long[] { id },     // rowIds
-  true                                                 // Boolean ignoreRowsNotFound
-);
+			smartsheet.SheetResources.RowResources.DeleteRows(sheetid, new long[] { id },true);
 			return "Delete Successfuly";
-			
 		}
-
-
 	}
 }
