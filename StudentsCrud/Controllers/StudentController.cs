@@ -19,11 +19,10 @@ namespace StudentsCrud.Controllers
 		public StudentController(IConfiguration iconfiguration)
 		{
 			_iconfiguration = iconfiguration;
-
 		}
 
-		static Dictionary<string, long> columnMap = new Dictionary<string, long>(); 
-
+		static Dictionary<string, long> columnMap = new Dictionary<string, long>();
+		
 		[HttpGet("GetStudentDetails")]
 		public List<Student> GetStudentDetails()
 		{
@@ -31,9 +30,9 @@ namespace StudentsCrud.Controllers
 			try
 			{
 				Token token = new Token();
-				String accessToken = "RGQpN47l4kJBvLaOc4jlTONkd2jaexjuUe3pA";
+				String accessToken = _iconfiguration["AccessToken"];
+				long sheetid = Convert.ToInt64(_iconfiguration["SheetId"]);
 				token.AccessToken = accessToken;
-				long sheetid = 4988319210727300;
 				SmartsheetClient smartsheet = new SmartsheetBuilder().SetAccessToken(token.AccessToken).Build();
 				Sheet sheet = smartsheet.SheetResources.GetSheet(sheetid, null, null, null, null, null, null, null);
 				foreach (Row tmpRow in sheet.Rows)
@@ -63,12 +62,12 @@ namespace StudentsCrud.Controllers
 			}
 			return result;
 		}
-		[HttpPost("StudentdetailByrowId")]
-		public Row StudentdetailByrowId([FromBody] long id)
+		[HttpGet("StudentdetailByrowId/{id}")]
+		public Row StudentdetailByrowId(long id)
 		{
-			String accessToken = "RGQpN47l4kJBvLaOc4jlTONkd2jaexjuUe3pA";
+			String accessToken = _iconfiguration["AccessToken"];
+			long sheetid = Convert.ToInt64(_iconfiguration["SheetId"]);
 			SmartsheetClient smartsheet = new SmartsheetBuilder().SetAccessToken(accessToken).Build();
-			long sheetid = 4988319210727300;
 			Sheet sheet = smartsheet.SheetResources.GetSheet(sheetid, null, null, null, null, null, null, null);
 			Row row = smartsheet.SheetResources.RowResources.GetRow(sheetid,id,null,null);
 			return row;
@@ -78,9 +77,9 @@ namespace StudentsCrud.Controllers
 		{
 			try
 			{
-				String accessToken = "RGQpN47l4kJBvLaOc4jlTONkd2jaexjuUe3pA";
+				String accessToken = _iconfiguration["AccessToken"];
+				long sheetid = Convert.ToInt64(_iconfiguration["SheetId"]);
 				SmartsheetClient smartsheet = new SmartsheetBuilder().SetAccessToken(accessToken).Build();
-				long sheetid = 4988319210727300;
 				Sheet sheet = smartsheet.SheetResources.GetSheet(sheetid, null, null, null, null, null, null, null);
 				if (st.RowId ==0)
 				{
@@ -144,15 +143,15 @@ namespace StudentsCrud.Controllers
 
 			return "Data inserted Successfully";
 		}
-		[HttpPost("Delete")]
+		[HttpDelete("Delete/{id}")]
 		public string Delete(long id)
 		{
-			String accessToken = "RGQpN47l4kJBvLaOc4jlTONkd2jaexjuUe3pA";
+			String accessToken = _iconfiguration["AccessToken"];
+			long sheetid = Convert.ToInt64(_iconfiguration["SheetId"]);
 			SmartsheetClient smartsheet = new SmartsheetBuilder().SetAccessToken(accessToken).Build();
-			long sheetid = 4988319210727300;
 			Sheet sheet = smartsheet.SheetResources.GetSheet(sheetid, null, null, null, null, null, null, null);
 			smartsheet.SheetResources.RowResources.DeleteRows(sheetid, new long[] { id },true);
-			return "Delete Successfuly";
+			return "Record Deleted Successfully!!";
 		}
 	}
 }
