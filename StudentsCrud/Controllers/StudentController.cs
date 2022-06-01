@@ -29,12 +29,14 @@ namespace StudentsCrud.Controllers
 			List<Student> result = new List<Student>();
 			try
 			{
+				int pageSize = 20;
+				int page = 1;
 				Token token = new Token();
 				String accessToken = _iconfiguration["AccessToken"];
 				long sheetid = Convert.ToInt64(_iconfiguration["SheetId"]);
 				token.AccessToken = accessToken;
 				SmartsheetClient smartsheet = new SmartsheetBuilder().SetAccessToken(token.AccessToken).Build();
-				Sheet sheet = smartsheet.SheetResources.GetSheet(sheetid, null, null, null, null, null, null, null);
+				Sheet sheet = smartsheet.SheetResources.GetSheet(sheetid, null, null, null, null, null, pageSize, page);
 				foreach (Row tmpRow in sheet.Rows)
 				{
 					Student StudentData = null;
@@ -72,77 +74,87 @@ namespace StudentsCrud.Controllers
 			Row row = smartsheet.SheetResources.RowResources.GetRow(sheetid,id,null,null);
 			return row;
 		}
-		[HttpPost("AddorUpdatestudent")]
-		public object AddorUpdatestudent([FromBody]Student st)
-		{
-			try
-			{
-				String accessToken = _iconfiguration["AccessToken"];
-				long sheetid = Convert.ToInt64(_iconfiguration["SheetId"]);
-				SmartsheetClient smartsheet = new SmartsheetBuilder().SetAccessToken(accessToken).Build();
-				Sheet sheet = smartsheet.SheetResources.GetSheet(sheetid, null, null, null, null, null, null, null);
-				if (st.RowId ==0)
-				{
-
-					// Add rows to sheet
-					
-					columnMap.Clear();
-					foreach (Column column in sheet.Columns)
-						columnMap.Add(column.Title, (long)column.Id);
-
-					List<Cell> cells = new List<Cell>();
-					Cell[] cellsA = null;
-					Row rowA = null;
-					
-					cellsA = new Cell[]
-					{
-					 new Cell.AddCellBuilder(sheet.Columns[0].Id, st.StudentName).Build()
-					,new Cell.AddCellBuilder(sheet.Columns[1].Id, st.Grade).Build()
-					,new Cell.AddCellBuilder(sheet.Columns[2].Id, st.Address).Build()
-					,new Cell.AddCellBuilder(sheet.Columns[3].Id, st.City).Build()
-					,new Cell.AddCellBuilder(sheet.Columns[4].Id, st.Country).Build()
-					,new Cell.AddCellBuilder(sheet.Columns[5].Id, st.Postal).Build()
-					,new Cell.AddCellBuilder(sheet.Columns[6].Id, st.Phone).Build()
-					,new Cell.AddCellBuilder(sheet.Columns[7].Id, st.Email).Build()
 		
-					};
-					rowA = new Row.AddRowBuilder(true, null, null, null, null).SetCells(cellsA).Build();
-					IList<Row> newRows = smartsheet.SheetResources.RowResources.AddRows(sheetid, new Row[] { rowA });
-					
-				}
-				else
-				{
-					if (st.RowId > 0)
-					{
-						var obj=StudentdetailByrowId(st.RowId);
-						if (obj.Id > 0)
-						{
-							
-						}
-						var cellToUpdateB = new Cell
-						{
-							ColumnId = 1888812600190852,
-							Value = "A"
-						};
+		//[HttpPost("AddorUpdatestudent")]		
+		//public object AddorUpdatestudent(Student st)
+		//{
+		//	string status = "";
+		//	try
+		//	{
+		//		String accessToken = _iconfiguration["AccessToken"];
+		//		long sheetid = Convert.ToInt64(_iconfiguration["SheetId"]);
+		//		SmartsheetClient smartsheet = new SmartsheetBuilder().SetAccessToken(accessToken).Build();
+		//		Sheet sheet = smartsheet.SheetResources.GetSheet(sheetid, null, null, null, null, null, null, null);
+				
+		//		if (st == null)
+		//		{
+		//			return BadRequest("Given data is null");
+		//		}
+		//		else
+		//		{
+		//			if (st.RowId == 0)
+		//			{
 
-						// Identify row and add new cell values to it
-						var rowToUpdate = new Row
-						{
-							Id = 6572427401553796,
-							Cells = new Cell[] { cellToUpdateB }
-						};
-						IList<Row> updatedRow = smartsheet.SheetResources.RowResources.UpdateRows(sheetid,new Row[] { rowToUpdate });
-						return "Updated Successfully";
-					}
-				}
-			}
-			catch (Exception ex)
-			{
-				Console.Write(ex.Message);
-			}
+		//				// Add rows to sheet
 
-			return "Data inserted Successfully";
-		}
+		//				columnMap.Clear();
+		//				foreach (Column column in sheet.Columns)
+		//					columnMap.Add(column.Title, (long)column.Id);
+
+		//				List<Cell> cells = new List<Cell>();
+		//				Cell[] cellsA = null;
+		//				Row rowA = null;
+
+		//				cellsA = new Cell[]
+		//				{
+		//			 new Cell.AddCellBuilder(sheet.Columns[0].Id, st.StudentName).Build()
+		//			,new Cell.AddCellBuilder(sheet.Columns[1].Id, st.Grade).Build()
+		//			,new Cell.AddCellBuilder(sheet.Columns[2].Id, st.Address).Build()
+		//			,new Cell.AddCellBuilder(sheet.Columns[3].Id, st.City).Build()
+		//			,new Cell.AddCellBuilder(sheet.Columns[4].Id, st.Country).Build()
+		//			,new Cell.AddCellBuilder(sheet.Columns[5].Id, st.Postal).Build()
+		//			,new Cell.AddCellBuilder(sheet.Columns[6].Id, st.Phone).Build()
+		//			,new Cell.AddCellBuilder(sheet.Columns[7].Id, st.Email).Build()
+
+		//				};
+		//				rowA = new Row.AddRowBuilder(true, null, null, null, null).SetCells(cellsA).Build();
+		//				IList<Row> newRows = smartsheet.SheetResources.RowResources.AddRows(sheetid, new Row[] { rowA });
+		//				return status="Data inserted Successfully";
+		//			}
+		//			else
+		//			{
+		//				if (st.RowId > 0)
+		//				{
+		//					var obj = StudentdetailByrowId(st.RowId);
+		//					if (obj.Id > 0)
+		//					{
+
+		//					}
+		//					var cellToUpdateB = new Cell
+		//					{
+		//						ColumnId = 1888812600190852,
+		//						Value = "A"
+		//					};
+
+		//					// Identify row and add new cell values to it
+		//					var rowToUpdate = new Row
+		//					{
+		//						Id = 6572427401553796,
+		//						Cells = new Cell[] { cellToUpdateB }
+		//					};
+		//					IList<Row> updatedRow = smartsheet.SheetResources.RowResources.UpdateRows(sheetid, new Row[] { rowToUpdate });
+		//					return status = "Updated Successfully";
+		//				}
+		//			}
+		//		}
+		//	}
+		//	catch (Exception ex)
+		//	{
+		//		Console.Write(ex.Message);
+		//	}
+		//	return status;
+			
+		//}
 		[HttpDelete("Delete/{id}")]
 		public string Delete(long id)
 		{
@@ -152,6 +164,125 @@ namespace StudentsCrud.Controllers
 			Sheet sheet = smartsheet.SheetResources.GetSheet(sheetid, null, null, null, null, null, null, null);
 			smartsheet.SheetResources.RowResources.DeleteRows(sheetid, new long[] { id },true);
 			return "Record Deleted Successfully!!";
+		}
+
+		[HttpPut]
+		[Route("AddorUpdatestudent")]
+		public object AddorUpdatestudent([FromBody] Student student)
+		{
+			string status = "";
+		
+			return status;
+
+		}
+
+		[HttpPost("Addstudent")]
+		public object Addstudent([FromBody] Student st)
+		{
+			string status = "";
+			try
+			{
+				String accessToken = _iconfiguration["AccessToken"];
+				long sheetid = Convert.ToInt64(_iconfiguration["SheetId"]);
+				SmartsheetClient smartsheet = new SmartsheetBuilder().SetAccessToken(accessToken).Build();
+				Sheet sheet = smartsheet.SheetResources.GetSheet(sheetid, null, null, null, null, null, null, null);
+
+				if (st == null)
+				{
+					return BadRequest("Given data is null");
+				}
+				else
+				{
+					if (st.RowId == 0)
+					{
+						// Add rows to sheet
+						columnMap.Clear();
+						foreach (Column column in sheet.Columns)
+							columnMap.Add(column.Title, (long)column.Id);
+
+						List<Cell> cells = new List<Cell>();
+						Cell[] cellsA = null;
+						Row rowA = null;
+
+						cellsA = new Cell[]
+						{
+					 new Cell.AddCellBuilder(sheet.Columns[0].Id, st.StudentName).Build()
+					,new Cell.AddCellBuilder(sheet.Columns[1].Id, st.Grade).Build()
+					,new Cell.AddCellBuilder(sheet.Columns[2].Id, st.Address).Build()
+					,new Cell.AddCellBuilder(sheet.Columns[3].Id, st.City).Build()
+					,new Cell.AddCellBuilder(sheet.Columns[4].Id, st.Country).Build()
+					,new Cell.AddCellBuilder(sheet.Columns[5].Id, st.Postal).Build()
+					,new Cell.AddCellBuilder(sheet.Columns[6].Id, st.Phone).Build()
+					,new Cell.AddCellBuilder(sheet.Columns[7].Id, st.Email).Build()
+
+						};
+						rowA = new Row.AddRowBuilder(true, null, null, null, null).SetCells(cellsA).Build();
+						IList<Row> newRows = smartsheet.SheetResources.RowResources.AddRows(sheetid, new Row[] { rowA });
+						return status = "Data inserted Successfully";
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.Write(ex.Message);
+			}
+			return status;
+
+		}
+		[HttpPut("Updatestudent")]
+		public object Updatestudent([FromBody] Student st)
+		{
+			try
+			{
+				String accessToken = _iconfiguration["AccessToken"];
+				long sheetid = Convert.ToInt64(_iconfiguration["SheetId"]);
+				SmartsheetClient smartsheet = new SmartsheetBuilder().SetAccessToken(accessToken).Build();
+				Sheet sheet = smartsheet.SheetResources.GetSheet(sheetid, null, null, null, null, null, null, null);
+
+				if (st == null)
+				{
+					return BadRequest("Given data is null");
+				}
+				else
+				{
+					if (st.RowId != 0)
+					{
+						// Add rows to sheet
+						columnMap.Clear();
+						foreach (Column column in sheet.Columns)
+							columnMap.Add(column.Title, (long)column.Id);
+
+						if (st.RowId > 0)
+						{
+							var obj = StudentdetailByrowId(st.RowId);
+							if (obj.Id > 0)
+							{
+
+							}
+							var cellToUpdateB = new Cell
+							{
+								ColumnId = 1888812600190852,
+								Value = "A"
+							};
+
+							// Identify row and add new cell values to it
+							var rowToUpdate = new Row
+							{
+								Id = 6572427401553796,
+								Cells = new Cell[] { cellToUpdateB }
+							};
+							IList<Row> updatedRow = smartsheet.SheetResources.RowResources.UpdateRows(sheetid, new Row[] { rowToUpdate });
+							
+						}
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.Write(ex.Message);
+			}
+			return "Updated Successfully";
+
 		}
 	}
 }
