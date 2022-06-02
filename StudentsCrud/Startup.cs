@@ -25,7 +25,7 @@ namespace StudentsCrud
 		public void ConfigureServices(IServiceCollection services)
 		{
 			services.AddControllersWithViews();
-
+			services.AddMvc().AddNewtonsoftJson();
 			services.AddCors();
 
 			// Default Policy

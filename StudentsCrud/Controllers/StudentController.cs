@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using StudentsCrud.Models;
 using Smartsheet.Api.OAuth;
 using Microsoft.Extensions.Configuration;
+using StudentsCrud.Controllers;
+using StudentsCrud.Helper;
 
 namespace StudentsCrud.Controllers
 {
@@ -166,9 +168,9 @@ namespace StudentsCrud.Controllers
 			return "Record Deleted Successfully!!";
 		}
 
-		[HttpPut]
+		[HttpPost]
 		[Route("AddorUpdatestudent")]
-		public object AddorUpdatestudent([FromBody] Student student)
+		public object AddorUpdatestudent([FromBody]Student student)
 		{
 			string status = "";
 		
@@ -229,7 +231,7 @@ namespace StudentsCrud.Controllers
 			return status;
 
 		}
-		[HttpPut("Updatestudent")]
+		[HttpPost("Updatestudent")]
 		public object Updatestudent([FromBody] Student st)
 		{
 			try
@@ -251,7 +253,7 @@ namespace StudentsCrud.Controllers
 						columnMap.Clear();
 						foreach (Column column in sheet.Columns)
 							columnMap.Add(column.Title, (long)column.Id);
-
+						var rows = new List<Row>();
 						if (st.RowId > 0)
 						{
 							var obj = StudentdetailByrowId(st.RowId);
@@ -259,20 +261,55 @@ namespace StudentsCrud.Controllers
 							{
 
 							}
+							long StudentNameColumnId = 0;
+							long GradeColumnId = 0;
+							foreach (var item in columnMap)
+							{
+								Console.WriteLine("Key " + item.Key + " Value " + item.Value);
+								//var GradeColumnId = GetColumnByTitle(sheet, "Grade", false)?.Id;
+								if (columnMap.ContainsKey("StudentName"))
+								{
+									StudentNameColumnId = item.Value;
+								}
+								else if (columnMap.ContainsKey("Grade"))
+								{
+									GradeColumnId = item.Value;
+								}
+								rows.Add(new Row
+								{
+									Id = st.RowId,
+									Cells = new List<Cell>
+									{
+										new Cell
+										{
+											ColumnId = 5776089125545860,
+											Value = st.StudentName
+
+										},
+										new Cell
+										{
+											ColumnId = 3899085337978756,
+											Value = st.Grade
+										}
+									}
+
+								});
+							}
 							var cellToUpdateB = new Cell
 							{
-								ColumnId = 1888812600190852,
-								Value = "A"
+								ColumnId = 5776089125545860,
+								Value = st.StudentName
 							};
 
 							// Identify row and add new cell values to it
 							var rowToUpdate = new Row
 							{
-								Id = 6572427401553796,
+								Id = st.RowId,
 								Cells = new Cell[] { cellToUpdateB }
 							};
+							//IList<Row> updatedRow = smartsheet.SheetResources.RowResources.UpdateRows(sheetid,rows);
 							IList<Row> updatedRow = smartsheet.SheetResources.RowResources.UpdateRows(sheetid, new Row[] { rowToUpdate });
-							
+
 						}
 					}
 				}
@@ -284,5 +321,7 @@ namespace StudentsCrud.Controllers
 			return "Updated Successfully";
 
 		}
+		
 	}
+	
 }
