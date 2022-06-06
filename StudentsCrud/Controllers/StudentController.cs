@@ -28,13 +28,11 @@ namespace StudentsCrud.Controllers
 		static Dictionary<string, long> columnMap = new Dictionary<string, long>();
 
 		[HttpGet("GetStudentDetails")]
-		public List<Student> GetStudentDetails()
+		public List<Student> GetStudentDetails(int pageSize, int page)
 		{
 			List<Student> result = new List<Student>();
 			try
 			{
-				int pageSize = 25;
-				int page = 1;
 				Token token = new Token();
 				String accessToken = _iconfiguration["AccessToken"];
 				long sheetid = Convert.ToInt64(_iconfiguration["SheetId"]);
@@ -279,15 +277,15 @@ namespace StudentsCrud.Controllers
 
 		}
 	
-		[HttpGet("oauthurl")]
-		public object oauthurl()
+		[HttpGet]
+		public RedirectResult oauthurl()
 		{
 			OAuthFlow oauth = new OAuthFlowBuilder()
 				 .SetTokenURL("https://api.smartsheet.com/2.0/token")
 				 .SetAuthorizationURL("https://www.smartsheet.com/b/authorize")
 				 .SetClientId(_iconfiguration["SmartsheetClientId"])
 				 .SetClientSecret(_iconfiguration["SmartsheetClientSecret"])
-				 .SetRedirectURL("http://localhost:3000/callback")
+				 .SetRedirectURL("https://localhost:44398/callback")
 				 .Build();
 
 			string url = oauth.NewAuthorizationURL
@@ -306,10 +304,11 @@ namespace StudentsCrud.Controllers
 				},
 				"key=Test"
 			);
-			return url;
+			return RedirectPermanent(url);
 		}
 
-		[HttpGet("Oauth")]
+		[Route("callback")]
+		[HttpGet]
 		public string OauthCallback(string code, int expires_in, string state)
 		{
 			OAuthFlow oauth = new OAuthFlowBuilder()
@@ -317,10 +316,10 @@ namespace StudentsCrud.Controllers
 				.SetAuthorizationURL("https://www.smartsheet.com/b/authorize")
 				.SetClientId(_iconfiguration["SmartsheetClientId"])
 				.SetClientSecret(_iconfiguration["SmartsheetClientSecret"])
-				.SetRedirectURL("https://localhost:3000/callback")
+				.SetRedirectURL("https://localhost:44398/callback")
 				.Build();
 
-			AuthorizationResult authResult = oauth.ExtractAuthorizationResult("http://localhost:3000/callback" + Request.QueryString.ToString());
+			AuthorizationResult authResult = oauth.ExtractAuthorizationResult("https://localhost:44398/callback" + Request.QueryString.ToString());
 			Token token = oauth.ObtainNewToken(authResult);
 			return token.AccessToken;
 		}
