@@ -16,6 +16,7 @@ namespace StudentsCrud.Models
 		public string Phone { get; set; }
 		public string Email { get; set; }
 		public long RowId { get; set; }
+		public int TotalRowCount { get; set; }
 
 	}
 }

@@ -49,7 +49,7 @@ namespace StudentsCrud.Controllers
         }
 
         // GET oauth/signin
-        [HttpGet("signin")]
+        [HttpGet("oauth/signin")]
         public string SignInCallback(string code, int expires_in, string state)
         {
             OAuthFlow oauth = new OAuthFlowBuilder()

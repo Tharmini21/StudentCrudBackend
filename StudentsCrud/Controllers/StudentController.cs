@@ -54,7 +54,8 @@ namespace StudentsCrud.Controllers
 							Postal = Convert.ToString(tmpRow.Cells[5].Value),
 							Phone = Convert.ToString(tmpRow.Cells[6].Value),
 							Email = Convert.ToString(tmpRow.Cells[7].Value),
-							RowId = Convert.ToInt64(tmpRow.Id.Value)
+							RowId = Convert.ToInt64(tmpRow.Id.Value),
+							TotalRowCount=Convert.ToInt32(sheet.TotalRowCount)
 						};
 					}
 					result.Add(StudentData);
